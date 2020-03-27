@@ -1,0 +1,375 @@
+```{r}
+library(gridExtra)
+library(ggplot2)
+library(tseries)
+library(fitdistrplus)
+library(formattable)
+library(reticulate)
+library("GGally")
+library(corrplot)
+library(tidyverse)
+library(factoextra)
+library(cluster)
+```
+
+# Read the data 
+data_train <- read.csv('football_data_with_matches.csv', header=T, sep=',')
+formattable(data_train)
+
+data_train <- subset(data_train, select = -c(FTHG, FTAG, HY, AY, HR, AR))
+formattable(data_train)
+
+# Check the dimension of the data
+dim(data_train)
+
+# Get the summary of the data 
+summary(data_train)
+
+# Find the match in which the HS is 0
+a <- data_train[data_train$HF == 0,]
+a
+
+
+# Histograms of variables
+```{r} 
+p1 <- ggplot(data_train, aes(x=HTHG)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Half-time Home Goal') + ylab('Frequency') + labs(title='(1)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p2 <- ggplot(data_train, aes(x=HTAG)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Half-time Away Goal') + ylab('Frequency') + labs(title='(2)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p3 <- ggplot(data_train, aes(x=HTR)) + 
+  geom_bar(stat='bin', color ="gray30",fill="goldenrod2", bins=10) + xlab('Half-time Result') + ylab('Frequency') + labs(title='(3)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p4 <- ggplot(data_train, aes(x=HS)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Home shot') + ylab('Frequency') + labs(title='(4)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p5 <- ggplot(data_train, aes(x=AS)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Away shot') + ylab('Frequency') + labs(title='(5)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p6 <- ggplot(data_train, aes(x=HST)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Home shot on target') + ylab('Frequency') + labs(title='(6)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p7 <- ggplot(data_train, aes(x=AST)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Away shot on target') + ylab('Frequency') + labs(title='(7)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p8 <- ggplot(data_train, aes(x=HF)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Home foul') + ylab('Frequency') + labs(title='(8)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p9 <- ggplot(data_train, aes(x=AF))+
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Away foul') + ylab('Frequency') + labs(title='(9)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p10 <- ggplot(data_train, aes(x=HC)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Home corner') + ylab('Frequency') + labs(title='(10)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+p11 <- ggplot(data_train, aes(x=AC)) + 
+  geom_histogram(color ="gray30",fill="goldenrod2", bins=10) + xlab('Away corner') + ylab('Frequency') + labs(title='(11)') + theme_light()+ theme(axis.title.y = element_text(size = 10),axis.title.x = element_text(face = 'bold'))
+
+grid.arrange(p1, p2, p3, p4, p5, p6,p7, p8, p9, p10, p11, ncol=3, nrow =4)
+```
+
+# Statistic test 
+# Apply Jarque-bara test
+```{r}
+descdist(data_train$HTHG, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$HTHG)
+
+descdist(data_train$HTAG, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$HTAG)
+
+descdist(data_train$HTR, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$HTR)
+
+descdist(data_train$HS, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$HS)
+
+descdist(data_train$AS, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$AS)
+
+descdist(data_train$HST, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$HST)
+
+descdist(data_train$AST, discrete = TRUE, graph=FALSE)
+jarque.bera.test(data_train$AST)
+
+descdist(data_train$HF, discrete = FALSE, graph=FALSE)
+jarque.bera.test(data_train$HF)
+
+descdist(data_train$AF, discrete = FALSE, graph=FALSE)
+jarque.bera.test(data_train$AF)
+
+descdist(data_train$HC, discrete = FALSE, graph=FALSE)
+jarque.bera.test(data_train$HC)
+
+descdist(data_train$AC, discrete = FALSE, graph=FALSE)
+jarque.bera.test(data_train$AC)
+``` 
+
+
+```{r}
+# Bivariate examination
+# Pair plot for all variables 
+colnames(data_train)
+######## USE PYTHON HERE ######
+##### ASSUME THE SAME IN THE REPORT ######
+ggpairs(data_train, columns = 2:18, columnLabels = c("HTHG", "HTAG", "HTR", "HS", "AS", "HST", "AST", "HF", "AF", "HC", "AC","FTR","FTG"), upper = list(continuous = wrap('cor', method = 'spearman', size = 3,alignPercent = 1 )) +theme_bw()+theme(legend.position = "right"))
+
+
+# Check the shape of the data
+dim(data_train)
+
+################
+# Select the suitable columns for analysis 
+data <- data_train %>% select(2:14)
+View(data)
+
+# Make the correlation matrix
+cor.mtest <- function(mat, ...) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+        for (j in (i + 1):n) {
+            tmp <- cor.test(mat[, i], mat[, j], ...)
+            p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+        }
+    }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
+}
+# matrix of the p-value of the correlation
+p.mat <- cor.mtest(data_train)
+
+# Compute correlation matrix
+M <- cor(data)
+
+# Make the correllogram 
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(M, method="color", col=col(200),  
+         type="upper", order="hclust", 
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col="black", tl.srt=45, #Text label color and rotation
+         # Combine with significance
+         p.mat = p.mat, sig.level = 0.01, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal
+         diag=TRUE
+         )
+
+# Correlation and covariance matrix
+as.data.frame(cor(data_train[2:14], method = 'spearman'))
+cov(data_train[,3:13])
+
+# Convert to dataframe to use the sum() function
+x <- as.data.frame(data) 
+# HTR vs HTHG
+
+# HTHG vs HST (percentage)
+(sum(x$HST) / 380) / (sum(x$HTHG) / 380) # 7.2 shots needed = 1 goal
+
+# HTAG vs AST (%)
+(sum(x$AST) / 380) / (sum(x$HTAG) / 380) # 7.03 shots needed = 1 goal
+
+# HS vs HST (%)
+(sum(x$HST) / 380) / (sum(x$HS) / 380) # 33% on target
+
+# AS vs AST (%)
+(sum(x$AST) / 380) / (sum(x$AS) / 380) # 34.3 on target
+
+# HS vs HC
+(sum(x$HS) / 380) / (sum(x$HC) / 380)
+
+# AS vs AC
+(sum(x$AS) / 380) / (sum(x$AC) / 380)
+
+# 
+```
+
+###############
+# MULTIVARIATE STATISTICAL ANALYSIS
+###############
+
+```{r}
+# 1. Principal Component Analysis
+data.PCA <- prcomp(data, scale = TRUE)
+
+# Summary of the PCA 
+summary(data.PCA)
+library(factoextra)
+fviz_eig(data.PCA, addlabels=TRUE, barfill="royalblue4", ncp = 10) + labs(x = "Principal Components", y = "% of variances") + theme_light()
+data.PCA$loadings
+data.PCA$n.obs
+data.PCA$scores
+data.PCA$sdev
+
+data.PCA.fullScore <- data.frame(data.PCA$scores)
+row.names(data.PCA.fullScore) <- data$HomeTeam
+
+library(ggbiplot)
+library(tidyverse)
+
+data.PCA.score <- as.data.frame(data.PCA$scores[,1:6])
+first <- ggbiplot(data.PCA, choices=c(1,2),labels = data_train$Matches) + ggtitle('PC1 and PC2')+ theme_light()+theme(legend.position = "bottom", legend.background = element_rect(fill = "grey95"),legend.title = element_text(color = "white", size = 10), legend.text = element_text(color = 'Black', size = 7)) + labs(color='Continent')
+first
+
+# Horizontal axis: On the left, there are groups of strong teams in the league. There are correlations between HST, HS, and HC in which those team are the home team. 
+# On the right, there are groups of weak teams in the league. There are correlations between AST, HTAG, HR, HY, HS in which those team are the home team. 
+# On the vertical axis, it says about if the match is won by the home team given its domination in the match
+
+# The second principal explains the harshness of the matches 
+second <- ggbiplot(data.PCA, choices=c(3,4),labels = data_train$Matches) + ggtitle('PC3 and PC4')+ theme_light()+theme(legend.position = "bottom", legend.background = element_rect(fill = "grey95"),legend.title = element_text(color = "white", size = 10), legend.text = element_text(color = 'Black', size = 7)) + labs(color='Continent')
+second
+
+h <- data_train[data_train$Matches == 'ARS v MU',]
+h
+
+
+# Arrange multiple plots on the same image
+grid.arrange(first,second,ncol=2, nrow=1)
+```
+
+```{r}
+
+# 2. K-mean clustering
+# Set the seed for reproducibility 
+set.seed(123)
+
+# Read the data 
+df <- read.csv('football_data_with_matches.csv', header=TRUE, row.names='Matches')
+library(formattable)
+formattable(df)
+View(df)
+# Standardize the variable
+df.stand <- scale(df[-1])
+
+library(factoextra)
+
+# Determine number of clusters using the WCSS method
+wss <- (nrow(df)-1)*sum(apply(df,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(df, 
+   centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+  
+# Initialize the k-means model 
+k.mean3 <- kmeans(df.stand,centers=3, iter.max = 10, nstart = 25)
+print(k.mean3)
+  
+# Visualize the cluster through 2D dimension
+clusplot(df.stand,k.mean3$cluster,stand=T,color=T,shade=T,labels=2,lines=0, col.clus=c('#009E73','#CC79A7','#D55E00'), col.p=c('#D55E00', '#CC79A7','#009E73')[k.mean3$cluster], col.txt=c('#D55E00', '#CC79A7','#009E73')[k.mean3$cluster],  sub='',cex=0.85, main = 'k = 3', xlab = 'Standardized PC1 (28.8%)', ylab = 'Standardized PC2 (18.3%)')
+
+# Clustering Interpretation
+# First cluster: show the matches that the home team wins in which the home team dominates the match through the high number of on-target shot and away-corner
+df["LIV v MU",]
+df["MC v HUD",]
+df["CHE v BUR",]
+df["MC v BUR",]
+
+# Second cluster: show the matches that the away team wins in which the away team dominates the match through the high number of on-target shot and away-corner
+df["BRI v MC",]
+df["BUR v EVE",]
+df["SOU v MC",]
+
+# Third cluster: show the matches that the result is not predictable based on the given match figures. In some of the matches, the away team wins in which the home team dominates the match, shots more than the away team but then be concealed and loss against the away team
+df["WHM v CHE",]
+df["CHE v MC",]
+df["WOL v CRY",]
+df["MU v WAT",]
+df["LEI v WAT",]
+
+
+```
+
+# Multivariate Linear Regression for predicting the total goal of a match based on available measurements
+```{r}
+football_df_lm <- read.csv('football_data_regression', header=T, sep=',')
+View(football_df_lm)
+# Random sample indexes
+train_index <- sample(1:nrow(football_df_lm), 0.8 * nrow(football_df_lm))
+test_index <- setdiff(1:nrow(football_df_lm), train_index)
+
+# Build X_train, y_train, X_test, y_test
+X_train <- football_df_lm[train_index, 2:13]
+y_train <- football_df_lm[train_index, "FTG"]
+
+X_test <- football_df_lm[test_index, 2:13]
+y_test <- football_df_lm[test_index, "FTG"]
+
+# Create all possible models
+library(plyr)
+
+all.subsets <- function(set) {
+  n <- length(set)
+  bin <- expand.grid(rlply(n, c(F, T)))
+  mlply(bin, function(...) { set[c(...)] })
+}
+
+list_models <- lapply(all.subsets(c("HTHG","HTAG","HTR","HS","AS","HST","AST","HF","AF","HC")), function(char) paste(char, collapse = " + "))
+
+# Make objects for AIC
+AICs <- numeric(1023)
+
+# The empty model is done separately
+football_empty <- lm(FTG ~ 1, data = X_train)
+AICs[1] <- AIC(football_empty)
+
+# Go through all non-empty models
+for(i in 2:1023){
+  football_i <- lm(as.formula(paste0("FTG ~ ", list_models[[i]])), data = X_train)
+  AICs[i] <- AIC(football_i)
+}
+
+AICs
+
+# Model with the best/minimal AIC
+list_models[[which.min(AICs)]]
+
+football_lm <- lm(FTG ~ HTHG + HTAG + HST + AST + AF + HC, data=X_train)
+summary(football_lm)
+
+library(car)
+vif(football_lm)
+FTGPred <- predict(football_lm, X_test)  
+
+#install.packages('DMwR')
+library(DMwR)
+actuals_preds <- data.frame(cbind(actuals=y_test, predicteds=FTGPred))
+regr.eval(actuals_preds$actuals, actuals_preds$predicteds)
+```
+
+Random Forest Classification: classify the match as either interesting or uninteresting
+```{r}
+# For this task, we add to the existing dataset a column named "Interesting". The match is labeled 1 ('interesting)' if the total number of goal in that match is at least 3 goals and 0 ('uninteresting') if it has less than 3 goals.
+
+football_df_lm$Interesting[football_df_lm$FTG >= 3] <- 1
+football_df_lm$Interesting[football_df_lm$FTG < 3] <- 0
+View(football_df_lm)
+
+# Check the balance of the data
+table(football_df_lm$Interesting)
+# Interesting: 204, uninteresting: 176. The data is sufficiently balanced between the number of interesting and uninteresting match.
+
+# For classification, we split the data into training (75%) and testing data (25%).
+# Use the caTools package for splitting the dataset
+#install.packages('caTools')
+library(caTools)
+
+# Set the seed for reproducible result
+set.seed(123) 
+sample = sample.split(football_df_lm$Interesting, SplitRatio = .75)
+train = subset(football_df_lm, sample == TRUE)
+test  = subset(football_df_lm, sample == FALSE)
+
+# Import the required library
+#install.packages('randomForest')
+library(randomForest)
+
+# Initialize the Random Forest Model
+rf <- randomForest(as.factor(Interesting) ~ ., data=train[,-12], ntree=100, importance=T)
+print(rf)
+
+# Build the Random Forest model with initial variables = sqrt(n)
+# Check the accuracy of the model by the Out-of-bag error and choose the best model with minimum OOBE with variables above or less than initial model
+
+```
+
