@@ -1,7 +1,4 @@
 # MS-E2112 Multivariate Statistical Analysis
-## Project Description 
-This is the final project for the course MS-E2112 Multivariate Statistical Analysis at Aalto University. 
-
 ## Data Source
 In this project, I use the results of the most recent Premier League season 2018/2019. The data has 380 rows and 13 columns. Each row corresponds to a match of two teams (home team and away team). Each column corresponds to a specific attribute of the match. 
 The dataset contains the following attributes: 
